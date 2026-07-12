@@ -1,0 +1,6 @@
+{
+  "name": "EcoSphere",
+  "description": "An elegant, interactive, and fully functional ESG management platform featuring Catppuccin-themed glassmorphism, carbon calculators, compliance checklists, social diversity matrices, reports generator, and interactive gamification offsets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
