@@ -1,66 +1,101 @@
-"""
-OWNER: Dev 1 — Governance module.
+from __future__ import annotations
 
-ESGPolicy, PolicyAcknowledgement, Audit, ComplianceIssue.
-This is the only models file you should be editing for Governance work.
-"""
 from datetime import date, datetime
+from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Date, DateTime, Enum, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import Base
-from core.enums import AuditStatus, ComplianceIssueStatus, PolicyStatus, Severity
-from models.mixins import TimestampMixin
+from core.enums import AuditStatus, ComplianceIssueStatus, Severity
+
+if TYPE_CHECKING:
+    from models.core import User
 
 
-class ESGPolicy(Base, TimestampMixin):
+class ESGPolicy(Base):
     __tablename__ = "esg_policies"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     title: Mapped[str] = mapped_column(String(150), nullable=False)
-    description: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    description: Mapped[str | None] = mapped_column(String(2000), nullable=True)
     version: Mapped[str] = mapped_column(String(20), default="1.0")
-    effective_date: Mapped[date] = mapped_column(Date, nullable=False)
-    document_url: Mapped[str | None] = mapped_column(String(300), nullable=True)
-    status: Mapped[PolicyStatus] = mapped_column(default=PolicyStatus.DRAFT)
+    active_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    acknowledgements: Mapped[list[PolicyAcknowledgement]] = relationship(
+        "PolicyAcknowledgement", back_populates="policy"
+    )
 
 
-class PolicyAcknowledgement(Base, TimestampMixin):
+class PolicyAcknowledgement(Base):
     __tablename__ = "policy_acknowledgements"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    policy_id: Mapped[int] = mapped_column(ForeignKey("esg_policies.id"), nullable=False)
-    employee_id: Mapped[int] = mapped_column(ForeignKey("employees.id"), nullable=False)
-    acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    employee_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    policy_id: Mapped[int] = mapped_column(
+        ForeignKey("esg_policies.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    acknowledged_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
 
-    policy: Mapped["ESGPolicy"] = relationship("ESGPolicy")
+    employee: Mapped[User] = relationship(
+        "User", back_populates="policy_acknowledgements"
+    )
+    policy: Mapped[ESGPolicy] = relationship(
+        "ESGPolicy", back_populates="acknowledgements"
+    )
 
 
-class Audit(Base, TimestampMixin):
+class Audit(Base):
     __tablename__ = "audits"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     title: Mapped[str] = mapped_column(String(150), nullable=False)
-    department_id: Mapped[int | None] = mapped_column(ForeignKey("departments.id"), nullable=True)
-    auditor: Mapped[str] = mapped_column(String(120), nullable=False)
-    scheduled_date: Mapped[date] = mapped_column(Date, nullable=False)
-    completed_date: Mapped[date | None] = mapped_column(Date, nullable=True)
-    status: Mapped[AuditStatus] = mapped_column(default=AuditStatus.SCHEDULED)
-    findings_summary: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    auditor_name: Mapped[str] = mapped_column(String(120), nullable=False)
+    audit_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    status: Mapped[AuditStatus] = mapped_column(
+        Enum(AuditStatus), default=AuditStatus.SCHEDULED, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    compliance_issues: Mapped[list[ComplianceIssue]] = relationship(
+        "ComplianceIssue", back_populates="audit"
+    )
 
 
-class ComplianceIssue(Base, TimestampMixin):
-    """Every issue must have an Owner + Due Date (Section 8 business rule) —
-    enforce that in the schema/service layer, not just here."""
+class ComplianceIssue(Base):
     __tablename__ = "compliance_issues"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    audit_id: Mapped[int | None] = mapped_column(ForeignKey("audits.id"), nullable=True)
-    department_id: Mapped[int | None] = mapped_column(ForeignKey("departments.id"), nullable=True)
-    severity: Mapped[Severity] = mapped_column(nullable=False)
+    audit_id: Mapped[int | None] = mapped_column(
+        ForeignKey("audits.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    owner_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    severity: Mapped[Severity] = mapped_column(
+        Enum(Severity), nullable=False, index=True
+    )
     description: Mapped[str] = mapped_column(String(1000), nullable=False)
-    owner_employee_id: Mapped[int] = mapped_column(ForeignKey("employees.id"), nullable=False)
-    due_date: Mapped[date] = mapped_column(Date, nullable=False)
-    status: Mapped[ComplianceIssueStatus] = mapped_column(default=ComplianceIssueStatus.OPEN)
-    resolved_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    due_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    status: Mapped[ComplianceIssueStatus] = mapped_column(
+        Enum(ComplianceIssueStatus), default=ComplianceIssueStatus.OPEN, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    audit: Mapped[Audit | None] = relationship(
+        "Audit", back_populates="compliance_issues"
+    )
+    owner: Mapped[User] = relationship(
+        "User", back_populates="owned_issues"
+    )
