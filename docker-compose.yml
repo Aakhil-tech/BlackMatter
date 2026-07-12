@@ -19,7 +19,7 @@ services:
 
   api:
     container_name: api
-    build: .
+    build: ./backend
     ports:
       - "8000:8000"
     environment:
@@ -29,7 +29,6 @@ services:
       db:
         condition: service_healthy
     volumes:
-      # Fix the mount target to match the absolute WORKDIR /app
       - ./backend:/app
 
 volumes:
