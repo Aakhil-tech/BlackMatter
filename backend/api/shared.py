@@ -1,89 +1,95 @@
 """
-OWNER: shared. Departments, Employees, Categories — build this first,
-before either domain router, so Dev 1/Dev 2 have real FKs to point at.
+OWNER: shared — Departments, Users, Categories.
+Fully async, uses models.core (not the deleted models.shared).
 """
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.deps import get_db
 from models.core import Category, Department, User
-from schemas.shared import CategoryCreate, CategoryRead, DepartmentCreate, DepartmentRead, UserCreate, UserRead
+from schemas.shared import (
+    CategoryCreate, CategoryRead,
+    DepartmentCreate, DepartmentRead,
+    UserCreate, UserRead,
+)
 
-router = APIRouter(tags=["Shared: Departments / Employees / Categories"])
+router = APIRouter(tags=["Shared"])
 
 
-# --- Departments ---------------------------------------------------------
+# --- Departments ---
 
 @router.post("/departments", response_model=DepartmentRead, status_code=201)
-def create_department(payload: DepartmentCreate, db: Session = Depends(get_db)):
+async def create_department(payload: DepartmentCreate, db: AsyncSession = Depends(get_db)):
     dept = Department(**payload.model_dump())
     db.add(dept)
-    db.commit()
-    db.refresh(dept)
+    await db.commit()
+    await db.refresh(dept)
     return dept
 
 
 @router.get("/departments", response_model=list[DepartmentRead])
-def list_departments(db: Session = Depends(get_db)):
-    return db.query(Department).all()
+async def list_departments(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Department))
+    return result.scalars().all()
 
 
 @router.get("/departments/{department_id}", response_model=DepartmentRead)
-def get_department(department_id: int, db: Session = Depends(get_db)):
-    dept = db.get(Department, department_id)
+async def get_department(department_id: int, db: AsyncSession = Depends(get_db)):
+    dept = await db.get(Department, department_id)
     if not dept:
         raise HTTPException(404, "Department not found")
     return dept
 
 
-# --- Employees -------------------------------------------------------------
+# --- Users ---
 
-@router.post("/employees", response_model=EmployeeRead, status_code=201)
-def create_employee(payload: EmployeeCreate, db: Session = Depends(get_db)):
-    employee = Employee(**payload.model_dump())
-    db.add(employee)
-    db.commit()
-    db.refresh(employee)
-    # Keep Department.employee_count in sync. TODO (shared): move this into
-    # a service function if more places start mutating employee counts.
-    if employee.department_id:
-        dept = db.get(Department, employee.department_id)
+@router.post("/users", response_model=UserRead, status_code=201)
+async def create_user(payload: UserCreate, db: AsyncSession = Depends(get_db)):
+    user = User(**payload.model_dump())
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    if user.department_id:
+        dept = await db.get(Department, user.department_id)
         if dept:
             dept.employee_count += 1
-            db.commit()
-    return employee
+            await db.commit()
+    return user
 
 
-@router.get("/employees", response_model=list[EmployeeRead])
-def list_employees(department_id: int | None = None, db: Session = Depends(get_db)):
-    query = db.query(Employee)
+@router.get("/users", response_model=list[UserRead])
+async def list_users(department_id: int | None = None, db: AsyncSession = Depends(get_db)):
+    query = select(User)
     if department_id is not None:
-        query = query.filter(Employee.department_id == department_id)
-    return query.all()
+        query = query.where(User.department_id == department_id)
+    result = await db.execute(query)
+    return result.scalars().all()
 
 
-@router.get("/employees/{employee_id}", response_model=EmployeeRead)
-def get_employee(employee_id: int, db: Session = Depends(get_db)):
-    employee = db.get(Employee, employee_id)
-    if not employee:
-        raise HTTPException(404, "Employee not found")
-    return employee
+@router.get("/users/{user_id}", response_model=UserRead)
+async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
+    user = await db.get(User, user_id)
+    if not user:
+        raise HTTPException(404, "User not found")
+    return user
 
 
-# --- Categories --------------------------------------------------------
+# --- Categories ---
 
 @router.post("/categories", response_model=CategoryRead, status_code=201)
-def create_category(payload: CategoryCreate, db: Session = Depends(get_db)):
+async def create_category(payload: CategoryCreate, db: AsyncSession = Depends(get_db)):
     category = Category(**payload.model_dump())
     db.add(category)
-    db.commit()
-    db.refresh(category)
+    await db.commit()
+    await db.refresh(category)
     return category
 
 
 @router.get("/categories", response_model=list[CategoryRead])
-def list_categories(type: str | None = None, db: Session = Depends(get_db)):
-    query = db.query(Category)
+async def list_categories(type: str | None = None, db: AsyncSession = Depends(get_db)):
+    query = select(Category)
     if type is not None:
-        query = query.filter(Category.type == type)
-    return query.all()
+        query = query.where(Category.type == type)
+    result = await db.execute(query)
+    return result.scalars().all()

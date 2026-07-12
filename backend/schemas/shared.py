@@ -1,17 +1,14 @@
-"""
-OWNER: shared. Schemas for Department, Employee, Category.
-"""
 from datetime import datetime
-
 from pydantic import BaseModel, ConfigDict, EmailStr
+from core.enums import CategoryType, DepartmentStatus
 
-from core.enums import CategoryType, DepartmentStatus, EmployeeStatus
 
+# --- Department ---
 
 class DepartmentBase(BaseModel):
     name: str
     code: str
-    head_employee_id: int | None = None
+    head_id: int | None = None
     parent_department_id: int | None = None
     status: DepartmentStatus = DepartmentStatus.ACTIVE
 
@@ -27,25 +24,27 @@ class DepartmentRead(DepartmentBase):
     created_at: datetime
 
 
-class EmployeeBase(BaseModel):
+# --- User ---
+
+class UserBase(BaseModel):
     name: str
     email: EmailStr
     department_id: int | None = None
-    role: str = "employee"
-    status: EmployeeStatus = EmployeeStatus.ACTIVE
+    total_xp: int = 0
+    total_points: int = 0
 
 
-class EmployeeCreate(EmployeeBase):
+class UserCreate(UserBase):
     pass
 
 
-class EmployeeRead(EmployeeBase):
+class UserRead(UserBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
-    xp_total: int
-    points_balance: int
     created_at: datetime
 
+
+# --- Category ---
 
 class CategoryBase(BaseModel):
     name: str
