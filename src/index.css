@@ -1,93 +1,69 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
-  --color-surface-dim: #151217;
-  --color-surface-lowest: #100d12;
-  --color-surface-low: #1d1a20;
-  --color-surface: #151217;
-  --color-surface-high: #2c292e;
-  --color-surface-highest: #373339;
-  --color-on-surface: #e7e0e7;
-  --color-on-surface-variant: #cdc3d1;
-  --color-primary: #e2c7ff;
-  --color-on-primary: #3f1e66;
-  --color-primary-container: #cba6f7;
-  --color-on-primary-container: #57377f;
-  --color-secondary: #99d595;
-  --color-on-secondary: #00390c;
-  --color-secondary-container: #19511f;
-  --color-on-secondary-container: #88c384;
-  --color-tertiary: #8fdbff;
-  --color-on-tertiary: #003546;
-  --color-tertiary-container: #6dc0e5;
-  --color-on-tertiary-container: #004d65;
-  --color-error: #ffb4ab;
-  --color-on-error: #690005;
-  --color-error-container: #93000a;
-  --color-on-error-container: #ffdad6;
-
-  /* Custom Catppuccin accents as instructed */
-  --color-peach: #fab387;
-  --color-mantle: #181825;
+  /* Catppuccin Mocha Color Accents */
   --color-crust: #11111b;
+  --color-mantle: #181825;
+  --color-base: #1e1e2e;
+  --color-text-subtext: #cdd6f4;
   --color-mauve: #cba6f7;
   --color-sapphire: #74c7ec;
-  --color-green: #a6e3a1;
+  --color-green-env: #a6e3a1;
+  --color-peach: #fab387;
+  --color-red-err: #f38ba8;
 }
 
 body {
-  background-color: #11111b;
-  color: #cdd6f4;
-  position: relative;
+  background-color: var(--color-crust);
+  color: var(--color-text-subtext);
   font-family: var(--font-sans);
-  min-height: 100vh;
   overflow-x: hidden;
 }
 
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  opacity: 0.03;
-  pointer-events: none;
-  z-index: 50;
-}
-
-.glass-card {
-  background-color: rgba(24, 24, 37, 0.7);
+/* Glassmorphism Classes */
+.glass-panel {
+  background: rgba(24, 24, 37, 0.7);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 1.5rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.glass-card:hover {
-  border-color: rgba(203, 166, 247, 0.2); /* Mauve border on hover */
+.glass-panel:hover {
+  border-color: rgba(203, 166, 247, 0.2);
   transform: translateY(-2px);
 }
 
-.esg-gradient-text {
-  background: linear-gradient(135deg, #cba6f7, #74c7ec);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* Subtle Film Grain */
+.film-grain {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
-/* Custom scrollbars */
-::-webkit-scrollbar {
+/* Scrollbar customization */
+.custom-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
-::-webkit-scrollbar-track {
-  background: rgba(24, 24, 37, 0.5);
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
 }
-::-webkit-scrollbar-thumb {
-  background: rgba(203, 166, 247, 0.3);
-  border-radius: 9999px;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(203, 166, 247, 0.2);
+  border-radius: 10px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(203, 166, 247, 0.5);
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(203, 166, 247, 0.4);
 }

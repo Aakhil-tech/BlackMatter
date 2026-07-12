@@ -1,107 +1,81 @@
 /**
- * @license
- * SPDX-License-Identifier: Apache-2.0
+ * Schema Binding
+ * Strict TypeScript interfaces mirroring the Pydantic schemas in the backend.
  */
 
-export interface CarbonLogEntry {
+// Environmental (environmental.py)
+export interface EnvironmentalGoal {
   id: string;
-  date: string;
+  name: string;
   department: string;
-  activityType: 'Electricity' | 'Fuel/Gas' | 'Business Travel' | 'Waste Management' | 'Water Consumption';
-  amount: number; // Raw amount
-  unit: string; // e.g. kWh, Gallons, Miles, Tons
-  tco2e: number; // Calculated carbon equivalent
-  notes: string;
+  target_co2: number; // in tonnes
+  current_co2: number; // in tonnes
+  deadline: string;
+  status: "On Track" | "Active" | "Completed";
 }
 
-export interface DepartmentESG {
+// Social (social.py)
+export interface CSRActivity {
   id: string;
   name: string;
-  overallScore: number;
-  environmentalScore: number;
-  socialScore: number;
-  governanceScore: number;
-  headCount: number;
-  emissionsYTD: number; // tCO2e YTD
-  targetProgress: number; // % score or completion
+  category: string;
+  participants_count: number;
+  joined: boolean;
+  avatars: string[];
 }
 
-export interface CSRAllocation {
+export interface ApprovalRequest {
+  id: string;
+  employee_name: string;
+  employee_avatar: string;
+  activity_name: string;
+  hours: number;
+  status: "Pending" | "Approved" | "Rejected";
+}
+
+// Governance / Settings (governance.py / settings.py)
+export interface Department {
+  id: string;
   name: string;
-  percentage: number;
-  amountUSD: number;
-  color: string;
+  manager: string;
+  manager_avatar: string;
+  staff_count: number;
+  status: "Active" | "Maintenance";
+  icon: string; // e.g. "energy_savings_leaf", "water_drop", "diversity_3", "history_edu"
 }
 
-export interface EcoChallenge {
+// Gamification (gamification.py)
+export interface Challenge {
   id: string;
-  title: string;
+  name: string;
   description: string;
-  points: number;
-  progress: number;
-  target: number;
-  unit: string;
-  completed: boolean;
-  category: 'environmental' | 'social' | 'governance';
-  rewardBadge?: string;
-}
-
-export interface CarbonOffsetOffering {
-  id: string;
-  project: string;
-  location: string;
-  costPerTonne: number; // USD
-  tco2eAvailable: number;
-  description: string;
-  type: 'Forestry' | 'Wind Power' | 'Solar Farm' | 'Methane Capture';
-}
-
-export interface EcoBadge {
-  id: string;
-  title: string;
-  description: string;
+  xp_reward: number;
+  days_left: number;
+  category: "Environmental" | "Social" | "Governance";
   icon: string;
-  unlocked: boolean;
-  unlockedAt?: string;
 }
 
-export interface ComplianceItem {
+// Reports (reports.py)
+export interface ReportTemplate {
   id: string;
-  title: string;
+  name: string;
   description: string;
-  category: 'Ethics' | 'Financial' | 'Health & Safety' | 'Data Privacy' | 'Environmental Compliance';
-  status: 'Compliant' | 'In Progress' | 'Action Required';
-  dueDate: string;
-  responsibleOfficer: string;
+  status: "Ready" | "Updated" | "Review" | "Master";
+  category: "Environmental" | "Social" | "Governance" | "ESG Summary";
+  progress: number; // simulated generation progress (0 to 100)
 }
 
-export interface GovernanceIncident {
-  id: string;
-  date: string;
-  title: string;
-  description: string;
-  status: 'Investigating' | 'Resolved' | 'Action Taken';
-  severity: 'Low' | 'Medium' | 'High';
+export interface CustomReportConfig {
+  date_range: string;
+  departments: string[];
+  modules_included: string[];
 }
 
-export interface SocialMetrics {
-  genderDiversity: {
-    female: number;
-    male: number;
-    nonbinary: number;
-  };
-  minorityRepresentation: number; // percentage
-  employeeSatisfaction: number; // percentage index
-  trainingHoursPerEmployee: number;
-  communityInvestmentUSD: number;
-  workplaceSafetyIncidents: number;
-}
-
-export interface ESGThresholdSettings {
-  targetCarbonYTD: number; // tCO2e
-  governanceComplianceTarget: number; // %
-  socialSatisfactionTarget: number; // %
-  alertNotifications: boolean;
-  weeklySummaries: boolean;
-  riskWarningThreshold: number; // %
+// Dashboard metrics (for the overall views)
+export interface DashboardMetrics {
+  overall_score: number;
+  emissions_trend: { month: string; emissions: number }[];
+  top_departments: { name: string; score: number }[];
+  csr_allocation: { category: string; value: number; color: string }[];
+  total_csr_usd: number;
 }
