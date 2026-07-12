@@ -34,9 +34,13 @@ app.include_router(environmental.router, prefix="/api")
 app.include_router(governance.router, prefix="/api")
 
 # Dev 2 adds these when their work is done:
-# from api import social, gamification
-# app.include_router(social.router, prefix="/api")
-# app.include_router(gamification.router, prefix="/api")
+# Yea man -- Dev 2
+from api import social, gamification
+app.include_router(social.router, prefix="/api")
+app.include_router(gamification.router, prefix="/api")
+
+from api.auth import router as auth_router
+app.include_router(auth_router, prefix="/api")
 
 @app.get("/health")
 def health_check():
