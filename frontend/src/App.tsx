@@ -19,6 +19,9 @@ import {
 } from "lucide-react";
 
 // Views
+import LoginPage from "./components/auth/LoginPage";
+import { getToken, clearToken } from "./lib/api";
+import { LogOut } from "lucide-react";
 import DashboardView from "./components/dashboard/DashboardView";
 import EnvironmentalView from "./components/environmental/EnvironmentalView";
 import SocialView from "./components/social/SocialView";
@@ -28,6 +31,10 @@ import ReportsView from "./components/reports/ReportsView";
 import SettingsView from "./components/settings/SettingsView";
 
 export default function App() {
+  const [authed, setAuthed] = useState<boolean>(!!getToken());
+  const [currentUser, setCurrentUser] = useState<string>(
+    localStorage.getItem("ecosphere_user") || ""
+  );
   const [activeTab, setActiveTab] = useState<string>("Dashboard");
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -42,6 +49,24 @@ export default function App() {
     { name: "Reports", icon: <FileText className="w-5 h-5" />, color: "hover:text-peach text-peach" },
     { name: "Settings", icon: <Settings className="w-5 h-5" />, color: "hover:text-sapphire text-sapphire" },
   ];
+
+  // --- Auth gate ---
+  if (!authed) {
+    return (
+      <LoginPage
+        onSuccess={(email) => {
+          setCurrentUser(email);
+          setAuthed(true);
+        }}
+      />
+    );
+  }
+
+  const handleLogout = () => {
+    clearToken();
+    setAuthed(false);
+    setCurrentUser("");
+  };
 
   // Render active view
   const renderContent = () => {
@@ -141,17 +166,24 @@ export default function App() {
         {/* User Card footer */}
         <div className="border-t border-white/5 pt-6 space-y-4">
           <div className="flex items-center gap-3 bg-white/[0.01] border border-white/5 p-3 rounded-2xl">
-            <div className="w-10 h-10 rounded-full border border-white/10 bg-white/10 overflow-hidden shrink-0">
-              <img 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPW7UC5Cv0EYZ_FlfjAzklxdIRH0LaSfcYwrFf9yuQGDB1083yciI2REVx4jXfP48QWtpXm5EARORXtnzPtjmuUdKJQA3iF_bU85C2lcCZ_fLCrwC7PRdBamdH1bNbn8waPjr_lkBUC-AejYTFaKZE24Re8Z54G9E585ozncUnr2OFKYQ5g75jsve51c_yO3ATsbZn9yNcqm1Qyneiuqb86-EA9DMKcKz3YdHMXrYjsdfCRhH2nHnb" 
-                alt="Kenji Tanaka" 
-                className="w-full h-full object-cover" 
-              />
+            <div className="w-10 h-10 rounded-full border border-white/10 bg-green-env/20 flex items-center justify-center shrink-0">
+              <span className="text-sm font-bold text-green-env uppercase">
+                {currentUser ? currentUser[0] : "U"}
+              </span>
             </div>
-            <div className="min-w-0">
-              <h4 className="text-sm font-bold text-white truncate">Kenji Tanaka</h4>
-              <p className="text-[10px] text-on-surface-variant font-medium truncate">ESG Enterprise Admin</p>
+            <div className="min-w-0 flex-1">
+              <h4 className="text-sm font-bold text-white truncate">
+                {currentUser ? currentUser.split("@")[0] : "User"}
+              </h4>
+              <p className="text-[10px] text-on-surface-variant font-medium truncate">{currentUser}</p>
             </div>
+            <button
+              onClick={handleLogout}
+              title="Log out"
+              className="text-on-surface-variant hover:text-red-400 transition-colors shrink-0"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
 
           <div className="flex items-center justify-between text-[10px] text-on-surface-variant font-mono">

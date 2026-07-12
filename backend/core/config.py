@@ -23,5 +23,9 @@ class Settings(BaseSettings):
     DEFAULT_SOCIAL_WEIGHT: float = 0.3
     DEFAULT_GOVERNANCE_WEIGHT: float = 0.3
 
+    SECRET_KEY: str = "super_secret_fallback_key_change_in_production" # Y'all should add SECRET_KEY to the env, DONT FORGET
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+
 
 settings = Settings()
