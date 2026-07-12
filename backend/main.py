@@ -6,19 +6,21 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from core.config import settings
 from core.database import Base, engine
+from models.core import Department, User, Category  # noqa: F401
+from models.environmental import EmissionFactor, CarbonTransaction, EnvironmentalGoal  # noqa: F401
+from models.social import CSRActivity, EmployeeParticipation  # noqa: F401
+from models.governance import ESGPolicy, PolicyAcknowledgement, Audit, ComplianceIssue  # noqa: F401
+from models.gamification import Challenge, ChallengeParticipation, Badge, UserBadge, Reward  # noqa: F401
+from api import environmental, governance, shared
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # CRITICAL CHECK: engine MUST be created with create_async_engine()
-    # If it is a standard synchronous engine, this async block will fail.
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
 
 app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
 
-# The CORS Demon is banished here.
-# Ensure settings.CORS_ORIGINS contains ["*"] in your config for Demo Day.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -26,6 +28,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(shared.router, prefix="/api")
+app.include_router(environmental.router, prefix="/api")
+app.include_router(governance.router, prefix="/api")
+
+# Dev 2 adds these when their work is done:
+# from api import social, gamification
+# app.include_router(social.router, prefix="/api")
+# app.include_router(gamification.router, prefix="/api")
 
 @app.get("/health")
 def health_check():

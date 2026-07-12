@@ -1,69 +1,47 @@
-"""OWNER: Dev 1 — Environmental schemas."""
+# schemas/environmental.py
 from datetime import date, datetime
-
 from pydantic import BaseModel, ConfigDict
-
 from core.enums import CarbonSourceType
 
 
-class EmissionFactorBase(BaseModel):
-    name: str
-    source_type: CarbonSourceType
+class EmissionFactorCreate(BaseModel):
+    transaction_type: CarbonSourceType
+    factor_value: float
     unit: str
-    co2_per_unit: float
-    effective_date: date
-    is_active: bool = True
 
 
-class EmissionFactorCreate(EmissionFactorBase):
-    pass
-
-
-class EmissionFactorRead(EmissionFactorBase):
+class EmissionFactorRead(EmissionFactorCreate):
     model_config = ConfigDict(from_attributes=True)
     id: int
-
-
-class CarbonTransactionBase(BaseModel):
-    department_id: int
-    emission_factor_id: int
-    source_type: CarbonSourceType
-    source_reference_id: str | None = None
-    quantity: float
-    transaction_date: date
-
-
-class CarbonTransactionCreate(CarbonTransactionBase):
-    """calculated_emission_kgco2e is NOT accepted from the client — the
-    service layer computes it from quantity * emission_factor.co2_per_unit.
-    Don't add it here even if it'd make manual testing easier."""
-    pass
-
-
-class CarbonTransactionRead(CarbonTransactionBase):
-    model_config = ConfigDict(from_attributes=True)
-    id: int
-    calculated_emission_kgco2e: float
-    is_auto_calculated: bool
     created_at: datetime
 
 
-class EnvironmentalGoalBase(BaseModel):
-    department_id: int | None = None
-    title: str
+class CarbonTransactionCreate(BaseModel):
+    department_id: int
+    emission_factor_id: int
+    transaction_type: CarbonSourceType
     description: str | None = None
+    amount: float
+    recorded_date: date
+
+
+class CarbonTransactionRead(CarbonTransactionCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    calculated_emissions: float
+    emission_factor_used: float
+    created_at: datetime
+
+
+class EnvironmentalGoalCreate(BaseModel):
+    department_id: int | None = None
     target_metric: str
     target_value: float
-    start_date: date
-    end_date: date
+    deadline: date
     status: str = "active"
 
 
-class EnvironmentalGoalCreate(EnvironmentalGoalBase):
-    pass
-
-
-class EnvironmentalGoalRead(EnvironmentalGoalBase):
+class EnvironmentalGoalRead(EnvironmentalGoalCreate):
     model_config = ConfigDict(from_attributes=True)
     id: int
-    current_value: float
+    created_at: datetime

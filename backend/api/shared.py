@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from api.deps import get_db
-from models.shared import Category, Department, Employee
-from schemas.shared import CategoryCreate, CategoryRead, DepartmentCreate, DepartmentRead, EmployeeCreate, EmployeeRead
+from models.core import Category, Department, User
+from schemas.shared import CategoryCreate, CategoryRead, DepartmentCreate, DepartmentRead, UserCreate, UserRead
 
 router = APIRouter(tags=["Shared: Departments / Employees / Categories"])
 
