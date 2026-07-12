@@ -1,5 +1,6 @@
 services:
   db:
+    container_name: db
     image: postgres:15-alpine
     environment:
       POSTGRES_USER: ecosphere
@@ -17,17 +18,19 @@ services:
       start_period: 5s
 
   api:
+    container_name: api
     build: .
     ports:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql+asyncpg://ecosphere:ecosphere@db:5432/ecosphere
-      - WATCHFILES_FORCE_POLLING="true"
+      - WATCHFILES_FORCE_POLLING=true
     depends_on:
       db:
         condition: service_healthy
     volumes:
-      - .:/app
+      # Fix the mount target to match the absolute WORKDIR /app
+      - ./backend:/app
 
 volumes:
   pgdata:

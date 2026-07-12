@@ -1,24 +1,23 @@
-"""
-DB engine + session setup. Everyone imports `get_db` as a FastAPI
-dependency and `Base` to declare models. Don't create a second engine
-anywhere else.
-"""
-from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import declarative_base, sessionmaker
-
 from core.config import settings
 
-connect_args = {"check_same_thread": False} if settings.DATABASE_URL.startswith("sqlite") else {}
+# 1. Use create_async_engine instead of standard create_engine
+engine = create_async_engine(
+    settings.DATABASE_URL,
+    echo=True,  # Set to True to see the raw SQL queries in your docker logs
+)
 
-engine = create_engine(settings.DATABASE_URL, connect_args=connect_args)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# 2. Configure the sessionmaker to explicitly use the AsyncSession class
+AsyncSessionLocal = sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
 
 Base = declarative_base()
 
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# 3. An async generator dependency to yield sessions to routers later
+async def get_db():
+    async with AsyncSessionLocal() as session:
+        yield session
